@@ -28,88 +28,88 @@ PV_INIT_SIGNAL_HANDLER();
 bool AcquireImages()
 {
 
-	PvResult iResult;	
-	PvDeviceInfo *iDeviceInfo = NULL;
-	PvSystem iSystem;
-	iSystem.SetDetectionTimeout( 100 );
-	iResult = iSystem.Find();
-	if( !iResult.IsOK() ) //searech for ThermoCam
+	PvResult lResult;	
+	PvDeviceInfo *lDeviceInfo = NULL;
+	PvSystem lSystem;
+	lSystem.SetDetectionTimeout( 100 );
+	lResult = lSystem.Find();
+	if( !lResult.IsOK() ) //searech for ThermoCam
 	{
-		cout << "PvSystem::Find Error: " << iResult.GetCodeString().GetAscii();
+		cout << "PvSystem::Find Error: " << lResult.GetCodeString().GetAscii();
 		return -1;
 	}
-	PvUInt32 iInterfaceCount = iSystem.GetInterfaceCount();
+	PvUInt32 lInterfaceCount = lSystem.GetInterfaceCount();
 
-	for(PvUInt32 x = 0; x < iInterfaceCount; x++)
+	for(PvUInt32 x = 0; x < lInterfaceCount; x++)
 	{
-		PvInterface * iInterface = iSystem.GetInterface(x);
+		PvInterface * lInterface = lSystem.GetInterface(x);
 		cout << "Ethernet Interface " << endl;
-		cout << "IP Address: " << iInterface->GetIPAddress().GetAscii() << endl;
-		cout << "Subnet Mask: " << iInterface->GetSubnetMask().GetAscii() << endl << endl;
-		PvUInt32 lDeviceCount = iInterface->GetDeviceCount();
-		for(PvUInt32 y = 0; y < iDeviceCount ; y++)
+		cout << "IP Address: " << lInterface->GetIPAddress().GetAscii() << endl;
+		cout << "Subnet Mask: " << lInterface->GetSubnetMask().GetAscii() << endl << endl;
+		PvUInt32 lDeviceCount = lInterface->GetDeviceCount();
+		for(PvUInt32 y = 0; y < lDeviceCount ; y++)
 		{
-			iDeviceInfo = iInterface->GetDeviceInfo(y);
+			lDeviceInfo = lInterface->GetDeviceInfo(y);
 			cout << "ThermoCam " << endl;
-			cout << "IP Address: " << iDeviceInfo->GetIPAddress().GetAscii() << endl;
+			cout << "IP Address: " << lDeviceInfo->GetIPAddress().GetAscii() << endl;
 		}
 	}
-	if(iDeviceInfo != NULL)
+	if(lDeviceInfo != NULL)
 	{
-		cout << "Connecting to " << iDeviceInfo->GetIPAddress().GetAscii() << endl;
-		PvDevice iDevice;
-		iResult = iDevice.Connect(iDeviceInfo); // connect to ThermoCam
-		if ( !iResult.IsOK() )
+		cout << "Connecting to " << lDeviceInfo->GetIPAddress().GetAscii() << endl;
+		PvDevice lDevice;
+		lResult = lDevice.Connect(lDeviceInfo); // connect to ThermoCam
+		if ( !lResult.IsOK() )
 		{
-			cout << "Unable to connect to " << iDeviceInfo->GetIPAddress().GetAscii() << endl;
+			cout << "Unable to connect to " << lDeviceInfo->GetIPAddress().GetAscii() << endl;
 		}
 		else
 		{
-			cout << "Successfully connected to " << iDeviceInfo->GetIPAddress().GetAscii() << endl;
-    			PvGenParameterArray *iDeviceParams = iDevice.GetGenParameters();
-    			PvGenInteger *iPayloadSize = dynamic_cast<PvGenInteger *>(iDeviceParams->Get("PayloadSize"));
-    			PvGenCommand *iStart = dynamic_cast<PvGenCommand *>(iDeviceParams->Get("AcquisitionStart"));
-    			PvGenCommand *iStop = dynamic_cast<PvGenCommand *>(iDeviceParams->Get("AcquisitionStop"));
-    			iDevice.NegotiatePacketSize();
-    			PvStream iStream;
+			cout << "Successfully connected to " << lDeviceInfo->GetIPAddress().GetAscii() << endl;
+    			PvGenParameterArray *lDeviceParams = lDevice.GetGenParameters();
+    			PvGenInteger *lPayloadSize = dynamic_cast<PvGenInteger *>(lDeviceParams->Get("PayloadSize"));
+    			PvGenCommand *lStart = dynamic_cast<PvGenCommand *>(lDeviceParams->Get("AcquisitionStart"));
+    			PvGenCommand *lStop = dynamic_cast<PvGenCommand *>(lDeviceParams->Get("AcquisitionStop"));
+    			lDevice.NegotiatePacketSize();
+    			PvStream lStream;
     			cout << "Opening stream to ThermoCam" << endl;
-    			iStream.Open(iDeviceInfo->GetIPAddress()); // open stream
-    			PvInt64 iSize = 0; // read device payload size
-    			iPayloadSize->GetValue(iSize);
-    			PvUInt32 iBufferCount = (iStream.GetQueuedBufferMaximum() < BUFFER_COUNT) ? //set buffer size and count
-        		iStream.GetQueuedBufferMaximum() : 
+    			lStream.Open(lDeviceInfo->GetIPAddress()); // open stream
+    			PvInt64 lSize = 0; // read device payload size
+    			lPayloadSize->GetValue(lSize);
+    			PvUInt32 lBufferCount = (lStream.GetQueuedBufferMaximum() < BUFFER_COUNT) ? //set buffer size and count
+        		lStream.GetQueuedBufferMaximum() : 
         		BUFFER_COUNT;
-    			PvBuffer *iBuffers = new PvBuffer[iBufferCount];
-    			for (PvUInt32 i = 0; i < iBufferCount; i++)
+    			PvBuffer *lBuffers = new PvBuffer[lBufferCount];
+    			for (PvUInt32 i = 0; i < lBufferCount; i++)
     			{
-        			iBuffers[i].Alloc(static_cast<PvUInt32>(iSize));
+        			lBuffers[i].Alloc(static_cast<PvUInt32>(lSize));
     			}
-    			iDevice.SetStreamDestination(iStream.GetLocalIPAddress(), iStream.GetLocalPort()); //set device IP destination to the stream
-    			PvGenParameterArray *iStreamParams = iStream.GetParameters(); // get stream parameters
-    			PvGenInteger *iCount = dynamic_cast<PvGenInteger *>(iStreamParams->Get("ImagesCount"));
-    			PvGenFloat *iFrameRate = dynamic_cast<PvGenFloat *>(iStreamParams->Get("AcquisitionRate"));
-    			PvGenFloat *iBandwidth = dynamic_cast<PvGenFloat *>(iStreamParams->Get("Bandwidth"));
-    			for (PvUInt32 i = 0; i < iBufferCount; i++)
+    			lDevice.SetStreamDestination(lStream.GetLocalIPAddress(), lStream.GetLocalPort()); //set device IP destination to the stream
+    			PvGenParameterArray *lStreamParams = lStream.GetParameters(); // get stream parameters
+    			PvGenInteger *lCount = dynamic_cast<PvGenInteger *>(lStreamParams->Get("ImagesCount"));
+    			PvGenFloat *lFrameRate = dynamic_cast<PvGenFloat *>(lStreamParams->Get("AcquisitionRate"));
+    			PvGenFloat *lBandwidth = dynamic_cast<PvGenFloat *>(lStreamParams->Get("Bandwidth"));
+    			for (PvUInt32 i = 0; i < lBufferCount; i++)
     			{
-        			iStream.QueueBuffer(iBuffers + i);
+        			lStream.QueueBuffer(lBuffers + i);
     			}
-    			PvGenCommand *iResetTimestamp = dynamic_cast<PvGenCommand *>(iDeviceParams->Get("GevTimestampControlReset"));
-    			iResetTimestamp->Execute();
+    			PvGenCommand *lResetTimestamp = dynamic_cast<PvGenCommand *>(lDeviceParams->Get("GevTimestampControlReset"));
+    			lResetTimestamp->Execute();
     			cout << "Sending StartAcquisition command to ThermoCam" << endl; // stream open
-    			iResult = iStart->Execute();		
-			PvInt64 iWidth = 0, iHeight = 0;
-			iDeviceParams->GetIntegerValue("Width", iWidth);
-			iDeviceParams->GetIntegerValue("Height", iHeight);			
+    			lResult = lStart->Execute();		
+			PvInt64 lWidth = 0, lHeight = 0;
+			lDeviceParams->GetIntegerValue("Width", lWidth);
+			lDeviceParams->GetIntegerValue("Height", lHeight);			
 			cvNamedWindow("OpenCV: ThermoCam", CV_WINDOW_NORMAL); //create OpenCV display window
-			cv::Mat raw_iImage(cv::Size(iWidth, iHeight), CV_8U);  // create OpenCV Mat object
+			cv::Mat raw_lImage(cv::Size(lWidth, lHeight), CV_8U);  // create OpenCV Mat object
     			cout << "<press a key to stop streaming>" << endl; // stream images until key pressed
     			while (!PvKbHit()) 
     			{
-        			PvBuffer *iBuffer = NULL; //obatin next buffer
-				PvImage *iImage = NULL;
-				PvResult iOperationResult;	
-        			PvResult iResult = iStream.RetrieveBuffer(&iBuffer, &iOperationResult, 1000);
-        			if (iResult.IsOK())
+        			PvBuffer *lBuffer = NULL; //obatin next buffer
+				PvImage *lImage = NULL;
+				PvResult lOperationResult;	
+        			PvResult lResult = lStream.RetrieveBuffer(&lBuffer, &lOperationResult, 1000);
+        			if (lResult.IsOK())
         			{
 					timeval curTime;
 					gettimeofday(&curTime, NULL);
@@ -125,29 +125,29 @@ bool AcquireImages()
 					printf("current time: %s \n", currentTime);
         				if(lOperationResult.IsOK())
         				{
-						iCount->GetValue(iiImageCountVal);
-						iFrameRate->GetValue(iFrameRateVal);
-						iBandwidth->GetValue(iBandwidthVal);
-						if (iBuffer->GetPayloadType() == PvPayloadTypeImage)
+						lCount->GetValue(lImageCountVal);
+						lFrameRate->GetValue(lFrameRateVal);
+						lBandwidth->GetValue(lBandwidthVal);
+						if (lBuffer->GetPayloadType() == PvPayloadTypeImage)
 						{
-							iImage=iBuffer->GetImage();
-							iBuffer->GetImage()->Alloc(iImage->GetWidth(), iImage->GetHeight(), PvPixelMono8); // read image parameters
+							lImage=lBuffer->GetImage();
+							lBuffer->GetImage()->Alloc(lImage->GetWidth(), lImage->GetHeight(), PvPixelMono8); // read image parameters
 							
 						}
 					}
-					iImage->Attach(raw_iImage.data, iImage->GetWidth(), iImage->GetHeight(), PvPixelMono8);
+					lImage->Attach(raw_lImage.data, lImage->GetWidth(), lImage->GetHeight(), PvPixelMono8);
 					cv::imshow("OpenCV: ThermoCam",raw_lImage); // display image stream
-					PvBufferWriter iBufferWriter;
+					PvBufferWriter lBufferWriter;
 					stringstream filename;
 					filename << "ThermoCam" << currentTime << ".bmp"; 				
-					cv::imwrite(filename.str(), raw_iImage); // store image as bitmap file	
+					cv::imwrite(filename.str(), raw_lImage); // store image as bitmap file	
 					stringstream file;
 					file << "ThermoCam" << currentTime << ".xml";
 					cv::FileStorage fs(file.str(),cv::FileStorage::WRITE); //store raw image data
-					fs << "raw_lImage" << raw_iImage;
+					fs << "raw_lImage" << raw_lImage;
 					fs.release();
 					if(cv::waitKey(1000) >= 0) break; //sets image frequency
-					iStream.QueueBuffer(iBuffer); // queue buffer
+					lStream.QueueBuffer(lBuffer); // queue buffer
 					
 					
 			        }
@@ -159,20 +159,20 @@ bool AcquireImages()
 			PvGetChar(); // flush key buffer for next step
     			cout << endl << endl;
     			cout << "Sending AcquisitionStop command to ThermoCam" << endl;
-    			iStop->Execute();
-    			iStream.AbortQueuedBuffers();
-    			while (iStream.GetQueuedBufferCount() > 0)
+    			lStop->Execute();
+    			lStream.AbortQueuedBuffers();
+    			while (lStream.GetQueuedBufferCount() > 0)
     			{
-        			PvBuffer *iBuffer = NULL;
-        			PvResult iOperationResult;
-			        iStream.RetrieveBuffer(&iBuffer, &iOperationResult);
+        			PvBuffer *lBuffer = NULL;
+        			PvResult lOperationResult;
+			        lStream.RetrieveBuffer(&lBuffer, &lOperationResult);
 			}
     			cout << "Releasing buffers" << endl;
-    			delete []iBuffers; 
+    			delete []lBuffers; 
     			cout << "Closing stream" << endl;
-    			iStream.Close(); // close the stream
+    			lStream.Close(); // close the stream
     			cout << "Disconnecting ThermoCam" << endl;
-    			iDevice.Disconnect(); //disconnect ThermoCam
+    			lDevice.Disconnect(); //disconnect ThermoCam
 			return true;
 		}
 	}
